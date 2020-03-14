@@ -1,0 +1,140 @@
+# Events
+
+An event is used to advance the game state. It is somewhat
+analogous to a move, except that while a move changes
+`G`, an event changes `ctx`. Also, events are provided by the
+framework (as opposed to moves, which are written by you).
+
+Here is the complete list of events:
+
+##### endStage
+
+This event takes the player that called it out of the stage
+that they are in. If the definition for the current stage
+in the game object specifies a `next` option, then the player
+is taken to the next stage. If not, the player is
+returned to a state where they are not in any stage.
+
+```js
+endStage();
+```
+
+##### endTurn
+
+This event ends the turn.
+The default behavior is to increment `ctx.turn` by `1`
+and advance `currentPlayer` to the next player according
+to the configured [turn order](turn-order.md) (the default being a round-robin).
+
+This event also accepts an argument, which (if provided)
+switches the turn to the specified player instead.
+
+```js
+endTurn(); // without argument
+endTurn({ next: '2' }); // Player 2 is the next player.
+```
+
+##### endPhase
+
+This event ends the current phase. If the definition for the
+current phase in the game object specifies a
+`next` option, then the game moves to that phase. If not, the
+game returns to a state where no phase is active.
+
+```js
+endPhase();
+```
+
+##### endGame
+
+This event ends the game. If you pass an argument to it,
+then that argument is made available in `ctx.gameover`.
+After the game is over, further state changes to the game
+(via a move or event) are not possible.
+
+```js
+endGame();
+```
+
+##### setStage
+
+Takes the player that called the event into the stage specified.
+
+```js
+setStage('stage-name');
+```
+
+##### setPhase
+
+Takes the game into the phase specified. Ends the active phase first.
+
+```js
+setPhase('phase-name');
+```
+
+##### setActivePlayers
+
+Allows adding additional players to the set of "active players", and
+also any stages that you want to put them in. See the guide on [Stages](stages.md)
+for more details.
+
+### Triggering an event from game logic.
+
+You can trigger events from a move or any code inside
+your game logic (the phase's `onBegin` hook, for example).
+This is done through the `ctx.events` object:
+
+```js
+moves: {
+  drawCard: (G, ctx) => {
+    ctx.events.endPhase();
+  };
+}
+```
+
+Note that the event is just queued up and triggered **after** the move.
+You can still have other logic at the end of the move which will be
+run before the event is triggered.
+
+### Triggering an event from a React client.
+
+Events are available through `props` inside the
+`events` object. For example:
+
+```js
+import React from 'react';
+import PropTypes from 'prop-types';
+
+class Board extends React.Component {
+  static propTypes = {
+    events: PropTypes.any.isRequired,
+  };
+
+  onClick = () => {
+    this.props.events.endTurn();
+  };
+
+  render = () => <button onClick={this.onClick}>End Turn</button>;
+}
+```
+
+### Disabling events
+
+Events can be disabled. For example, you might not want a
+player to be able to end the game directly by simply calling
+the `endGame` event.
+
+In order to disable an event, just add `eventName: false` to
+the `events` section in your game config.
+
+```js
+const game = {
+  events: {
+    endGame: false,
+    ...
+  },
+};
+```
+
+!> This doesn't apply to events in game logic, but just the
+ability to call an event directly from a client.
