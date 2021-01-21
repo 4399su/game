@@ -141,7 +141,7 @@
   "dependencies": {
     "@koa/cors": "^2.2.1",
     "flatted": "^0.2.3",
-    "immer": "^1.8.0",
+    "immer": "^8.0.1",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
     "koa-router": "^7.2.1",
